@@ -1,0 +1,23 @@
+.inputRemember {
+  display: flex;
+}
+
+.inputRemember label {
+  margin-left: 0.25rem;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.inputWrapper label {
+  font-weight: bold;
+}
+
+.inputWrapper input {
+  padding: 5px;
+  font-size: 1.2rem;
+}

@@ -1,14 +1,42 @@
-import Account from '../../components/Account/Account'
-import Footer from '../../components/Footer/Footer'
-import Header from '../../components/Header/Header'
-import { useState } from 'react'
-// import { useEffect, useState } from 'react'
-
+import Account from "../../components/Account/Account";
+import Footer from "../../components/Footer/Footer";
+import Header from "../../components/Header/Header";
+import { useState, useEffect } from "react";
+import { getGlobalSate, updateGlobalSate } from "../../utils/Provider";
+import { loadUserData } from "../../services/dataManager";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
-  const [editName, setEditName] = useState(false)
-  const [firstName, setFirstName] = useState('John')
-  const [lastName, setLastName] = useState('Doe')
+  const [editName, setEditName] = useState(false);
+  const [firstName, setFirstName] = useState("John");
+  const [lastName, setLastName] = useState("Doe");
+  const [user, setUser] = useState({});
+
+  const navigate = useNavigate();
+  const token = getGlobalSate("token");
+
+  function handleUpdateUser(firstName, lastName) {
+    if (!firstName) return;
+    setUser({ firstName, lastName });
+    console.log(user);
+    updateGlobalSate("user", JSON.stringify(user));
+  }
+
+  useEffect(() => {
+    function setUserData() {
+      let currentUser;
+      if (!token) navigate("/signin");
+      loadUserData(token)
+        .then((response) => {
+          currentUser = response;
+          setUser(currentUser);
+        })
+        .catch((error) => console.log(error));
+      updateGlobalSate("user", JSON.stringify(currentUser));
+      return currentUser;
+    }
+    setUserData();
+  }, [token, navigate]);
 
   return (
     <div className="body">
@@ -21,7 +49,7 @@ function Profile() {
             <h1>
               Welcome back
               <br />
-              {firstName}
+              {user.firstName}
             </h1>
             <button className="edit-button" onClick={() => setEditName(true)}>
               Edit Name
@@ -48,31 +76,36 @@ function Profile() {
       </main>
       <Footer />
     </div>
-  )
+  );
 
   function templateEditName() {
     return (
       <div className="header">
         <h1>Welcome back</h1>
-        <form
-          className="editNameContainer"
-          
-        >
+        <form className="editNameContainer">
           <input
             type="text"
             className="firstNameInput"
-            placeholder={firstName}
+            placeholder={user.firstName}
             id="firstNameInput"
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={(e) => {
+              setFirstName(e.target.value);
+            }}
           />
           <input
             type="text"
             className="lastNameInput"
-            placeholder={lastName}
+            placeholder={user.lastName}
             id="lastNameInput"
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => {
+              setLastName(e.target.value);
+            }}
           />
-          <button type="submit" className="submitButton">
+          <button
+            type="submit"
+            className="submitButton"
+            onClick={() => handleUpdateUser({ firstName, lastName })}
+          >
             Save
           </button>
           <button onClick={() => setEditName(false)} className="cancelButton">
@@ -80,8 +113,8 @@ function Profile() {
           </button>
         </form>
       </div>
-    )
+    );
   }
 }
 
-export default Profile
+export default Profile;

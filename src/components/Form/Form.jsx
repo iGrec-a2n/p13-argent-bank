@@ -1,38 +1,19 @@
-// import { useEffect, useState } from 'react'
 import { useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
-// import { useDispatch, useSelector } from 'react-redux'
-// import { login, checkToken } from '../../redux/actions.js'
-
+import { useNavigate } from 'react-router-dom'
 import styles from './Form.module.css'
+import {loginSendData} from '../../services/dataManager'
+import { getGlobalSate, updateGlobalSate } from '../../utils/Provider'
 
-/**
- *
- * @component
- */
 function Form() {
-  // const dispatch = useDispatch()
-  // const navigate = useNavigate()
-  //@ts-ignore
-  // const { app } = useSelector((state) => state)
-
-  // useEffect(() => {
-  //   if (!app.isLogged && app.token && !app.loading) {
-  //     //@ts-ignore
-  //     dispatch(checkToken(app.token))
-  //   }
-  //   if (app.isLogged && app.token) {
-  //     navigate('/profile')
-  //   }
-  // }, [app.isLogged, app.token, app.loading, navigate, dispatch])
-
-  // function templateLoading() {
-  //   return <h1>loading</h1>
-  // }
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const navigate = useNavigate()
+  let validationFlag = false
+  let token = getGlobalSate('token') || null
+  // token = token ? token : null
+  
   function templateForm() {
+    if(token)navigate('/')
     return (
       <form onSubmit={(e) => handleSubmit(e)} id="loginForm">
         <div className={styles.inputWrapper}>
@@ -66,17 +47,39 @@ function Form() {
 
   async function handleSubmit(evt) {
     evt.preventDefault()
-    // dispatch(
-    //   //@ts-ignore
-    //   login({
-    //     email: email,
-    //     password: password,
-    //   })
-    // )
+    const isAuth = await loginSendData({
+      email: evt.target.elements.email.value,
+      password: evt.target.elements.password.value,
+    })
+    if (isAuth) {
+      console.log('in handleSubmit isAuth = true', isAuth)
+      token = isAuth.token
+      console.log(token);
+      updateGlobalSate('token', token)
+      return navigate('/profile')
+    } else {
+      console.log('in handleSubmit isAuth = false')
+      const loginForm = document.getElementById('loginSection')
+      loginForm.style.animation = ''
+      void loginForm.offsetWidth
+      loginForm.style.borderColor = 'rgb(200, 10, 10)'
+      loginForm.style.animation =
+      'shake 0.82s cubic-bezier(.36,.07,.19,.97) both'
+      const errorMessage = document.createElement('span')
+      if(validationFlag){
+        errorMessage.innerText = 'Veuillez verifier les informations de connexion'
+        errorMessage.style.color = 'crimson'
+        loginForm.appendChild(errorMessage)
+        validationFlag = true        
+      }else{
+        loginForm.parentNode.removeChild(errorMessage)
+        validationFlag = false
+      }
+    }
   }
 
+
   return templateForm()
-  // return app.loading ? templateLoading() : templateForm()
 }
 
 export default Form
